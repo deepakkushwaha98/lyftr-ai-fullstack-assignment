@@ -1,0 +1,14 @@
+
+.PHONY: up down logs test
+
+up:
+	docker compose up -d --build
+
+down:
+	docker compose down
+
+logs:
+	docker compose logs -f
+
+test:
+	docker compose exec backend python -m pytest tests -v
