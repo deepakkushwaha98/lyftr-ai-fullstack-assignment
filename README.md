@@ -1,149 +1,364 @@
-Lyftr AI — Full-Stack AI Chatbot
-A full-stack, session-aware AI chatbot built with React, FastAPI, LiteLLM, Google Gemini, and SQLite. It supports multi-turn conversations, response caching, automatic API-key failover, and per-message inference metadata.
-Features
-- Multi-turn conversations with session-based history
-- Google Gemini integration through LiteLLM
-- LiteLLM response caching for repeated model inputs
-- Automatic fallback across a pool of API keys
-- Configurable system prompts
-- SQLite conversation storage
-- Per-response metadata: source, model, latency, input/output tokens, key ID, and fallback attempts
-- Responsive React interface and Docker Compose setup
-Technology Stack
-Layer	Technology
-Frontend	React, Vite, JavaScript, CSS
-Backend	Python, FastAPI, Pydantic, LiteLLM
-LLM	Google Gemini (gemini/gemini-3.1-flash-lite)
-Database	SQLite
-Containerization	Docker, Docker Compose, Nginx
-Hosting	Vercel (frontend), Render (backend)
+# Lyftr AI — Full-Stack AI Chatbot
 
+A full-stack AI chatbot built using **React, FastAPI, LiteLLM, Google Gemini, and SQLite**.
 
-Project Structure
+The application supports multi-turn conversations, session-based message history, LLM response caching, automatic API-key failover, and detailed response metadata.
+
+The goal is to build a reliable AI chatbot that maintains conversation context, handles API failures gracefully, and reduces unnecessary model calls through caching.
+
+## Features
+
+- Multi-turn AI conversations with session-based history.
+- Google Gemini integration using LiteLLM.
+- Automatic failover between multiple API keys.
+- LLM response caching to reduce latency and API usage.
+- SQLite database for storing conversations.
+- Configurable system prompts.
+- Per-message input and output token tracking.
+- Response metadata including model, latency, and resolution source.
+- Responsive React chatbot interface.
+- REST API built with FastAPI.
+- Docker Compose support for local deployment.
+- API documentation using Swagger UI.
+- Error handling for invalid requests and unavailable LLM providers.
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Frontend | React, Vite, JavaScript, CSS |
+| Backend | Python, FastAPI, Pydantic |
+| LLM Integration | LiteLLM |
+| AI Model | Google Gemini |
+| Database | SQLite |
+| Containerization | Docker, Docker Compose |
+| Web Server | Nginx, Uvicorn |
+| Frontend Deployment | Vercel |
+| Backend Deployment | Render |
+| Version Control | Git, GitHub |
+
+## Project Architecture
+
+The React frontend communicates with the FastAPI backend through REST APIs.
+
+The backend manages conversation sessions, stores messages in SQLite, and sends requests to Gemini through LiteLLM.
+
+LiteLLM handles response caching, while the backend manages API-key fallback and returns metadata with each assistant response.
+
+**Request flow:**
+
+```text
+User
+  |
+  v
+React Frontend
+  |
+  v
+FastAPI Backend
+  |
+  +----> SQLite Database
+  |        |
+  |        +----> Session History
+  |
+  v
+LiteLLM Gateway
+  |
+  +----> Response Cache
+  |
+  +----> Gemini API (key_1)
+  |          |
+  |          +----> Failure
+  |                   |
+  +----> Gemini API (key_2)
+  |
+  v
+AI Response + Metadata
+  |
+  v
+React Frontend
+```
+
+## Project Structure
+
+```text
 lyftr-ai-fullstack-assignment/
-├── backend/
-│   ├── main.py
-│   ├── llm_service.py
-│   ├── database.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── tests/
-├── frontend/
-│   ├── src/
-│   ├── Dockerfile
-│   └── nginx.conf
-├── docker-compose.yml
-├── Makefile
-├── .env.example
-└── README.md
-1. Live URLs
-Resource	URL
-Frontend	https://lyftr-ai-fullstack-assignment.vercel.app
-Backend	https://lyftr-ai-fullstack-assignment.onrender.com
-API documentation	https://lyftr-ai-fullstack-assignment.onrender.com/docs
-Health check	https://lyftr-ai-fullstack-assignment.onrender.com/health
-Source code	https://github.com/deepakkushwaha98/lyftr-ai-fullstack-assignment
+|
+|-- backend/
+|   |-- main.py
+|   |-- llm_service.py
+|   |-- database.py
+|   |-- requirements.txt
+|   |-- Dockerfile
+|   |-- tests/
+|
+|-- frontend/
+|   |-- src/
+|   |-- Dockerfile
+|   |-- nginx.conf
+|
+|-- docker-compose.yml
+|-- Makefile
+|-- .env.example
+|-- README.md
+```
 
-Note: The backend's root URL (/) is not an application endpoint and may return 404 Not Found. Use /health or /docs to verify the service.
-2. Run locally: with Docker and without
-Prerequisites
+---
+
+## 1. Live URLs
+
+The application is publicly deployed and accessible without authentication.
+
+| Service | URL |
+|---|---|
+| Frontend | https://lyftr-ai-fullstack-assignment.vercel.app |
+| Backend | https://lyftr-ai-fullstack-assignment.onrender.com |
+| Swagger API Docs | https://lyftr-ai-fullstack-assignment.onrender.com/docs |
+| Health Endpoint | https://lyftr-ai-fullstack-assignment.onrender.com/health |
+| GitHub Repository | https://github.com/deepakkushwaha98/lyftr-ai-fullstack-assignment |
+
+**Deployment details:**
+
+- The frontend is hosted on Vercel.
+- The FastAPI backend is hosted on Render.
+- The frontend connects to the deployed backend through the `VITE_API_URL` environment variable.
+- API keys are stored securely as backend environment variables.
+- CORS is configured to allow communication between the deployed frontend and backend.
+
+**Storage note:** The free Render deployment uses an ephemeral filesystem. SQLite data may be lost after service restarts or redeployments. Local Docker storage uses a named volume for persistence.
+
+---
+
+## 2. Run Locally: With Docker and Without
+
+### Prerequisites
+
+Install the following:
+
 - Git
-- Two or more Google Gemini API keys
-- Docker with Docker Compose (for containerized setup)
-- Python and Node.js (for non-Docker setup)
-Environment configuration
-Create backend/.env and configure the application. Use .env.example as the reference for all supported variables.
+- Docker and Docker Compose
+- Python
+- Node.js and npm
+- At least two Gemini API keys
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/deepakkushwaha98/lyftr-ai-fullstack-assignment.git
+
+cd lyftr-ai-fullstack-assignment
+```
+
+### Configure Environment Variables
+
+Create a `.env` file inside the `backend` directory.
+
+Example:
+
+```env
 LLM_API_KEYS=your_first_gemini_key,your_second_gemini_key
 LLM_MODEL=gemini/gemini-3.1-flash-lite
 DATABASE_URL=sqlite:////data/app.db
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 ENABLE_FAILURE_SIMULATION=true
-Do not commit real API keys or .env files.
-With Docker (recommended)
-From the repository root:
+```
+
+Replace the placeholder keys with valid Gemini API keys.
+
+Never commit actual API keys to GitHub.
+
+### Option A: Run With Docker
+
+From the project root, run:
+
+```bash
 docker compose up -d --build
-Or, where make is available:
+```
+
+Alternatively, use the Makefile:
+
+```bash
 make up
-Local endpoints:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
-- Swagger UI: http://localhost:8000/docs
-If port 3000 is occupied, set FRONTEND_PORT=3001 in the Compose environment and use http://localhost:3001.
-Stop the services with:
+```
+
+The services will be available at:
+
+| Service | Local URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:8000 |
+| Swagger Docs | http://localhost:8000/docs |
+
+If port 3000 is occupied, configure `FRONTEND_PORT=3001` for Docker Compose.
+
+To stop the application:
+
+```bash
 docker compose down
-# or
+```
+
+Or:
+
+```bash
 make down
-The Docker configuration uses a named volume mounted at /data to retain SQLite conversation history across container restarts.
-Without Docker (development)
-In a terminal, from the repository root:
+```
+
+The Docker Compose configuration uses a named volume to store the SQLite database under `/data`.
+
+### Option B: Run Without Docker
+
+**Step 1: Start the backend**
+
+```bash
 cd backend
-python -m venv .venv
-Activate the environment (.venv\Scripts\activate on Windows PowerShell, or source .venv/bin/activate on macOS/Linux), then:
+```
+
+Create a Python virtual environment:
+
+```bash
+python -m venv venv
+```
+
+Activate it on Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
-For non-Docker execution, set DATABASE_URL to a writable local SQLite path, such as sqlite:///./app.db, and set ALLOWED_ORIGINS to the frontend development origin. Start the API:
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-In a second terminal:
+```
+
+For local execution, configure the database URL to point to a writable local SQLite file, for example:
+
+```env
+DATABASE_URL=sqlite:///./app.db
+```
+
+Start FastAPI:
+
+```bash
+uvicorn main:app --reload --port 8000
+```
+
+Backend URL:
+
+http://localhost:8000
+
+Swagger documentation:
+
+http://localhost:8000/docs
+
+**Step 2: Start the frontend**
+
+Open another terminal:
+
+```bash
 cd frontend
+```
+
+Install dependencies:
+
+```bash
 npm install
-Set VITE_API_URL=http://localhost:8000 in the frontend environment, then run:
+```
+
+Configure the frontend environment:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+Start the development server:
+
+```bash
 npm run dev
-Open the local URL displayed by Vite. The development server port may differ from the Docker frontend port.
+```
 
-3. Design decisions: key fallback, caching, SQLite session storage
-Request flow
-React frontend
-    |
-    v
-FastAPI /chat endpoint
-    |
-    +--> Load conversation history from SQLite
-    |
-    +--> LiteLLM + Gemini
-    |       |-- Check response cache
-    |       |-- Try key_1
-    |       `-- Fall back to key_2 on eligible errors
-    |
-    +--> Store user and assistant messages in SQLite
-    |
-    `--> Return reply + per-request metadata
-Key fallback
-LLM_API_KEYS is a comma-separated list. The backend attempts keys in order (key_1, key_2, etc.). On supported rate-limit, quota, connectivity, or service errors, it attempts the next key. If every key fails, it returns HTTP 503 with a readable error rather than an unhandled exception.
+Open the local URL displayed by Vite.
 
-The optional X-Simulate-Failure header allows deterministic testing when ENABLE_FAILURE_SIMULATION=true.
-Response caching
-LiteLLM's local cache can reuse a response when the model input is identical. Responses indicate whether they came from LLM_CACHE or LIVE_INFERENCE. Cache hits reduce repeated model calls and typically improve latency. The in-memory cache is process-local and is not guaranteed to survive server restarts.
-SQLite session storage
-The backend stores user and assistant messages by session_id, including assistant metadata. This allows conversations to retain context across requests and makes chat history retrievable through a dedicated endpoint.
+---
 
-Persistence: The local Docker configuration uses a named volume for SQLite. The free Render deployment uses ephemeral storage, so deployed history may reset after a restart or redeployment; it is not durable production storage.
-API endpoints
-Method	Endpoint	Description
-GET	/health	Health, configured key count, cache and database status
-POST	/chat	Send a message and receive a reply with metadata
-GET	/sessions/{session_id}/messages	Retrieve chronological conversation history
+## 3. Design Decisions: Key Fallback, Caching, SQLite Session Storage
 
+### API-Key Failover
 
-Example POST /chat request:
+The backend supports multiple Gemini API keys.
+
+Keys are loaded from the `LLM_API_KEYS` environment variable.
+
+Example:
+
+```env
+LLM_API_KEYS=key_one,key_two
+```
+
+The keys are assigned identifiers based on their order:
+
+- `key_1` — Primary API key
+- `key_2` — Secondary API key
+
+When the primary key fails due to rate limiting, quota errors, or supported server/network errors, the backend attempts the next configured key.
+
+This improves reliability and prevents a single API-key failure from immediately interrupting the chatbot.
+
+If all configured keys fail, the backend returns:
+
+```json
 {
-  "session_id": "example-session",
-  "message": "Explain REST APIs in simple terms.",
-  "system_prompt": "You are a helpful AI assistant."
+  "detail": "all providers unavailable"
 }
-4. Verification: how to see failover, cache hits and per-message token usage
-Open the Swagger API documentation and use Try it out.
-Health and chat history
-- GET /health should return HTTP 200 with healthy database and configured key information.
-- POST /chat with a valid message should return HTTP 200 and an assistant reply.
-- GET /sessions/{session_id}/messages should return the session's saved user and assistant messages in order.
-Cache hit
-Send the same model input again under equivalent conversation context. Inspect metadata.resolution_source:
-- LIVE_INFERENCE: response generated by Gemini
-- LLM_CACHE: response reused from LiteLLM cache
-Identical user text alone does not guarantee a hit if the accumulated conversation history changes the model input. The cache was verified with matching model inputs across separate sessions.
-Failover
-Set this request header on POST /chat:
-X-Simulate-Failure: key_1=429
-A successful fallback response should have HTTP 200 and metadata similar to:
+```
+
+HTTP status: `503 Service Unavailable`.
+
+### LLM Response Caching
+
+The application uses LiteLLM's built-in local in-memory caching.
+
+When the same model request is repeated, the cached response can be reused instead of making another Gemini API call.
+
+The backend reports the resolution source using:
+
+`LIVE_INFERENCE` — Response generated through a new model request.
+
+`LLM_CACHE` — Response retrieved from the cache.
+
+**Benefits:**
+
+- Lower response latency.
+- Reduced repeated API calls.
+- Lower token consumption for repeated requests.
+- Improved chatbot responsiveness.
+
+The cache is in-memory and may be cleared when the backend process restarts.
+
+### SQLite Session Storage
+
+SQLite stores conversation history for each session.
+
+Each message is associated with a unique `session_id`.
+
+The database stores:
+
+- Session ID
+- Message role (`user` or `assistant`)
+- Message content
+- Response metadata
+- Creation timestamp
+
+When a user sends a new message, the backend retrieves the existing session history and includes the relevant conversation context in the LLM request.
+
+This enables multi-turn conversations.
+
+SQLite was selected because it is lightweight, requires no external database server, and is suitable for a small chatbot application.
+
+### Response Metadata
+
+Every assistant response includes metadata such as:
+
+```json
 {
   "resolution_source": "LIVE_INFERENCE",
   "model": "gemini/gemini-3.1-flash-lite",
@@ -153,41 +368,242 @@ A successful fallback response should have HTTP 200 and metadata similar to:
   "key_id": "key_2",
   "fallback_attempts": 1
 }
-To simulate all keys failing, use:
+```
+
+This helps users understand whether the response was cached, which model was used, how long the request took, and how many tokens were consumed.
+
+---
+
+## 4. Verification: Failover, Cache Hits and Per-Message Token Usage
+
+The backend provides three API endpoints.
+
+### GET /health
+
+Checks whether the backend is running and its dependencies are configured.
+
+Example response:
+
+```json
+{
+  "status": "ok",
+  "keys_configured": 2,
+  "cache_enabled": true,
+  "database": "connected"
+}
+```
+
+### POST /chat
+
+Sends a user message to the AI chatbot.
+
+Example request:
+
+```json
+{
+  "session_id": "example-session",
+  "message": "Explain REST APIs in simple words."
+}
+```
+
+The response includes the assistant's reply and metadata.
+
+### GET /sessions/{session_id}/messages
+
+Retrieves stored conversation messages for a session in chronological order.
+
+Example:
+
+```text
+GET /sessions/example-session/messages
+```
+
+### Verify API-Key Failover
+
+Open the Swagger documentation:
+
+https://lyftr-ai-fullstack-assignment.onrender.com/docs
+
+Select `POST /chat`.
+
+Set the request header:
+
+```text
+X-Simulate-Failure: key_1=429
+```
+
+Example request body:
+
+```json
+{
+  "session_id": "failover-test",
+  "message": "Explain Redis in one sentence."
+}
+```
+
+Expected successful response metadata:
+
+```json
+{
+  "key_id": "key_2",
+  "fallback_attempts": 1
+}
+```
+
+This verifies that the backend switches to the secondary API key when the primary key is simulated as unavailable.
+
+### Verify All Providers Unavailable
+
+Set:
+
+```text
 X-Simulate-Failure: *=429
-Expected status: HTTP 503.
+```
+
+Send a new chat request.
+
+Expected response:
+
+HTTP `503 Service Unavailable`
+
+```json
 {
   "detail": "all providers unavailable"
 }
-Per-message token usage
-Each assistant response includes its own input_tokens and output_tokens in metadata, along with the model, resolution source, and latency. These values describe that request rather than a session-wide total.
-Validation and error handling
-Scenario	Expected HTTP status
-Valid chat request	200
-Empty or whitespace-only message	422
-Unknown session history	404
-All providers unavailable	503
+```
 
+### Verify Response Caching
 
-Backend tests
-Run tests inside the Docker backend container:
+Send an identical model request twice using the same conversation context.
+
+The first request should use:
+
+```text
+resolution_source: LIVE_INFERENCE
+```
+
+The repeated request should use:
+
+```text
+resolution_source: LLM_CACHE
+```
+
+A cache hit normally has lower latency than a new model request.
+
+To avoid changing the model input through conversation history, use separate fresh sessions with identical initial messages and system prompts.
+
+### Verify Conversation History
+
+Send messages using a session ID.
+
+Then call:
+
+```text
+GET /sessions/{session_id}/messages
+```
+
+The endpoint should return the stored user and assistant messages, including assistant metadata.
+
+### Verify Token Usage
+
+Each assistant response includes:
+
+- `input_tokens`
+- `output_tokens`
+- `latency_ms`
+- `model`
+- `resolution_source`
+
+These values describe the individual request rather than the total conversation.
+
+The React frontend displays this metadata alongside assistant responses.
+
+### Verify Error Handling
+
+| Scenario | Expected HTTP Status |
+|---|---|
+| Successful request | 200 |
+| Empty or whitespace-only message | 422 |
+| Nonexistent session | 404 |
+| All API keys unavailable | 503 |
+
+### Run Backend Tests
+
+With Docker:
+
+```bash
 docker compose exec backend python -m pytest tests -v
-Local backend tests have passed for caching, failover, request validation, and error handling.
-5. Setup Used: your editor and AI tools
-- Development environment: Visual Studio Code, terminal, Git and GitHub
-- API exploration and verification: FastAPI Swagger UI
-- Local container testing: Docker and Docker Compose
-- Deployment: Vercel and Render
-- AI-assisted development: AI tools were used to assist with implementation guidance, debugging, and documentation; functionality was validated through local tests and live endpoint checks.
-6. Bonus features (if any): what you added beyond the requirements and why
-The application includes useful interface and debugging conveniences:
-- Conversation history sidebar: Helps users revisit conversations within the available stored sessions.
-- API-key and fallback metadata: Makes failover behavior easier to inspect and verify.
-- System prompt support: Allows users to customize the assistant's behavior for a conversation.
-- Detailed error responses: Makes validation and provider outages easier to diagnose.
-Security notes
-- Keep Gemini API keys in backend environment variables only.
-- Do not commit secrets, .env files, or credentials.
-- Configure ALLOWED_ORIGINS for the intended frontend origins.
-- Use ENABLE_FAILURE_SIMULATION only in environments where failure testing is intended.
-Built for the Lyftr AI Full-Stack Assignment.
+```
+
+The backend test suite covers core API functionality and error-handling behavior.
+
+---
+
+## 5. Setup Used: Editor and AI Tools
+
+### Development Environment
+
+- **Code Editor:** Visual Studio Code
+- **Version Control:** Git and GitHub
+- **API Testing:** FastAPI Swagger UI
+- **Containerization:** Docker and Docker Compose
+- **Frontend Deployment:** Vercel
+- **Backend Deployment:** Render
+
+### AI Tools
+
+**ChatGPT (OpenAI)** was used as a development assistant for understanding requirements, discussing implementation approaches, debugging errors, reviewing API behavior, and preparing documentation.
+
+The application uses Google Gemini through LiteLLM for chatbot inference.
+
+---
+
+## 6. Bonus Features (If Any)
+
+The chatbot includes additional functionality to improve usability and observability.
+
+### Configurable System Prompt
+
+Users can customize the assistant's behavior by supplying a system prompt.
+
+This allows different chatbot personalities or task-specific instructions.
+
+### Response Metadata
+
+The frontend displays detailed metadata for assistant messages, including latency, token usage, model information, and response source.
+
+### Session-Based Conversation History
+
+Users can view messages belonging to individual conversation sessions.
+
+### API-Key Tracking
+
+The backend returns the identifier of the API key used for live inference and the number of fallback attempts.
+
+This makes failover behavior easier to verify.
+
+### Responsive User Interface
+
+The React interface is designed to provide a clean chat experience across different screen sizes.
+
+---
+
+## Security
+
+- Gemini API keys are stored in backend environment variables.
+- Real credentials are excluded from Git using `.gitignore`.
+- API keys are never included in frontend source code.
+- CORS restricts browser access to configured origins.
+- Request validation is handled using Pydantic.
+- Provider failures are handled through controlled API responses.
+- Failure simulation is controlled by the `ENABLE_FAILURE_SIMULATION` environment variable.
+
+---
+
+## Conclusion
+
+Lyftr AI is a full-stack chatbot application designed to demonstrate reliable LLM integration, automatic API-key failover, response caching, conversation persistence, and transparent response metadata.
+
+The project combines React, FastAPI, LiteLLM, Gemini, SQLite, and Docker into a deployable AI application.
+
+**Built for the Lyftr AI Full-Stack Assignment.**
