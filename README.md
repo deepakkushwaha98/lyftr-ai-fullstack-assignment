@@ -44,7 +44,6 @@ API documentation	https://lyftr-ai-fullstack-assignment.onrender.com/docs
 Health check	https://lyftr-ai-fullstack-assignment.onrender.com/health
 Source code	https://github.com/deepakkushwaha98/lyftr-ai-fullstack-assignment
 
-
 Note: The backend's root URL (/) is not an application endpoint and may return 404 Not Found. Use /health or /docs to verify the service.
 2. Run locally: with Docker and without
 Prerequisites
@@ -70,7 +69,6 @@ Local endpoints:
 - Backend: http://localhost:8000
 - Swagger UI: http://localhost:8000/docs
 If port 3000 is occupied, set FRONTEND_PORT=3001 in the Compose environment and use http://localhost:3001.
-
 Stop the services with:
 docker compose down
 # or
@@ -90,6 +88,7 @@ npm install
 Set VITE_API_URL=http://localhost:8000 in the frontend environment, then run:
 npm run dev
 Open the local URL displayed by Vite. The development server port may differ from the Docker frontend port.
+
 3. Design decisions: key fallback, caching, SQLite session storage
 Request flow
 React frontend
